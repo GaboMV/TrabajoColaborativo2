@@ -23,31 +23,6 @@ router.get('/usuarios', (req, res) => {
 });
 
 
-// Endpoint: Obtener todos los usuarios aplicar filtor por pagina y limite puede ser opcional pagina y limite
-router.get('/usuariosPaginado', (req, res) => {
-    //quiero adicionar la variable de cabecera para autorizacion berear
-    const authorization = req.headers['authorization'];
-    if (!authorization) {
-        return res.status(401).send('No se ha proporcionado la cabecera de autorización.');
-    }
-    if (authorization.toLowerCase() === `Bearer ${process.env.AUTH_TOKEN}`) {
-        return res.status(401).send('El token de autorización no es válido.');
-    }
-    //aquí continuamos con el código para obtener todos los usuarios aplicar filtro por pagina y limite
-    const { page, limit } = req.query;
-    if (!page ||!limit) {
-        return res.json(usuarios);
-    }
-    if (isNaN(page) || isNaN(limit) || limit < 1 || page < 1) {
-        return res.status(400).send('Los parámetros deben ser númericos y mayores a 0.');
-    }
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + parseInt(limit);
-    const usuariosPaginados = usuarios.slice(startIndex, endIndex);
-    res.status(200).json(usuariosPaginados); 
-    
-});
-
 // Endpoint: Obtener un usuario por ID
 router.get('/usuarios/:id', (req, res) => { 
     const usuario = usuarios.find(usuario => usuario.id === parseInt(req.params.id));
@@ -81,6 +56,7 @@ router.put('/usuarios/:id', (req, res) => {
     usuarios[usuarioIndex] = usuarioModificado;
     res.json(usuarioModificado);
 });
+
 // Endpoint: Eliminar un usuario por ID
 router.delete('/usuarios/:id', (req, res) => {
     const usuarioIndex = usuarios.findIndex(usuario => usuario.id === parseInt(req.params.id));
@@ -88,19 +64,42 @@ router.delete('/usuarios/:id', (req, res) => {
         return res.status(404).send('No se encontró el usuario.');
     }
     usuarios.splice(usuarioIndex, 1);
-    res.status(204).send();
+    res.status(200).send('Usuario eliminado satisfactoriamente');
     // Se puede devolver un mensaje de confirmación al usuario
-    res.json({ message: 'Usuario eliminado satisfactoriamente' });
 });
 
+// Endpoint: Obtener todos los usuarios aplicar filtor por pagina y limite puede ser opcional pagina y limite
+router.get('/usuariosPaginado', (req, res) => {
+    //quiero adicionar la variable de cabecera para autorizacion berear
+    const authorization = req.headers['authorization'];
+    if (!authorization) {
+        return res.status(401).send('No se ha proporcionado la cabecera de autorización.');
+    }
+    if (authorization.toLowerCase() === `Bearer ${process.env.AUTH_TOKEN}`) {
+        return res.status(401).send('El token de autorización no es válido.');
+    }
+    //aquí continuamos con el código para obtener todos los usuarios aplicar filtro por pagina y limite
+    const { page, limit } = req.query;
+    if (!page ||!limit) {
+        return res.json(usuarios);
+    }
+    if (isNaN(page) || isNaN(limit) || limit < 1 || page < 1) {
+        return res.status(400).send('Los parámetros deben ser númericos y mayores a 0.');
+    }
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + parseInt(limit);
+    const usuariosPaginados = usuarios.slice(startIndex, endIndex);
+    res.status(200).json(usuariosPaginados); 
+    
+});
 // Endpoint: Eliminar todos los usuarios
 router.delete('/eliminarUsuarios', (req, res) => {
     usuarios.length = 0;
-    res.status(204).send(usuarios);  
+    res.status(200).send('Usuarios eliminados');  
 });
 
 // Endpoint: Adicionar multiples usuarios
-router.post('/usuarios/bulk', (req, res) => {
+router.post('/usuariosBulk', (req, res) => {
     const usuariosNuevos = req.body.usuarios;
     if (!Array.isArray(usuariosNuevos)) {
         return res.status(400).send('Los datos enviados no son un arreglo.');
